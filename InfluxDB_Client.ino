@@ -106,7 +106,7 @@ void Measure_Humidity_and_Temp(enum MATERIAL type)
 
     // Humidity
     int sensorValue  = analogRead(SOIL_HUMIDITY_PIN);
-    humidity = 100 - ((sensorValue - 450) / 6);
+    humidity = (100 - ((sensorValue - 450) / 6)) - 5;
     strcpy(material,"soil");
   }
 
