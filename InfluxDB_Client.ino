@@ -11,6 +11,9 @@ enum MATERIAL{AIR, SOIL};
 #define DHTTYPE DHT22   // DHT 22  (AM2302)
 DHT dht(DHTPIN, DHTTYPE); //// Initialize DHT sensor for normal 16mhz Arduino
 
+#define LM35_PIN              A0
+#define SOIL_HUMIDITY_PIN     A1
+
 // Initialize the client for write_data()
 WiFiClient client;
 int status = WL_IDLE_STATUS;
@@ -40,8 +43,8 @@ void setup()
 
 void loop()
 {
-  Measure_Humidity_and_Temp(SOIL);
   Measure_Humidity_and_Temp(AIR);
+  Measure_Humidity_and_Temp(SOIL);
   delay(10000); //Delay 2 sec.
 }
 
@@ -75,8 +78,8 @@ void write_data(char *raw_data)
     client.println(String("Content-Length: ") + String(strlen(raw_data)));
     client.println();
     client.write(raw_data);
-    delay(5000);
     client.stop();
+    delay(5000);
   }
 }
 
@@ -90,13 +93,20 @@ void Measure_Humidity_and_Temp(enum MATERIAL type)
   {
     //Read data and store it to variables humidity and temp
     humidity  = dht.readHumidity();
-    temp      = dht.readTemperature();
+    temp      = dht.readTemperature() * 0.87;
     strcpy(material,"air");
   }
   else if (type == SOIL)
   {
-    humidity  = dht.readHumidity() - 2;
-    temp      = dht.readTemperature() - 2;
+    // Temperature
+    int val;
+    val = analogRead(LM35_PIN);
+    float mv = (val/1024.0)*5000;
+    temp = mv/10;
+
+    // Humidity
+    int sensorValue  = analogRead(SOIL_HUMIDITY_PIN);
+    humidity = 100 - ((sensorValue - 450) / 6);
     strcpy(material,"soil");
   }
 
@@ -104,6 +114,13 @@ void Measure_Humidity_and_Temp(enum MATERIAL type)
   char  humidity_str[9];
   dtostrf(temp,5,3,temp_str);
   dtostrf(humidity,5,3,humidity_str);
+
+  Serial.print(material);
+  Serial.print(": ");
+  Serial.print("Humidity: ");
+  Serial.print(humidity_str);
+  Serial.print(" Temperature: ");
+  Serial.println(temp_str);
 
   char *data_raw = (char*)malloc(155 * sizeof(char));
   sprintf(data_raw, "%s,source=garduino temp=%s,humidity=%s", material, temp_str, humidity_str);
