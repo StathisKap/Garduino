@@ -14,6 +14,11 @@ DHT dht(DHTPIN, DHTTYPE); //// Initialize DHT sensor for normal 16mhz Arduino
 #define LM35_PIN              A0
 #define SOIL_HUMIDITY_PIN     A1
 
+#define SOLENOIDVALVE_PIN  2
+
+
+#define FIFTEEN_MINUTES_PER_DAY 96
+
 // Initialize the client for write_data()
 WiFiClient client;
 int status = WL_IDLE_STATUS;
@@ -28,24 +33,40 @@ char path_and_querry[]      =   "/api/v2/write?bucket=Front_Garden/";
 // Global Variables
 float soil_temp;
 float soil_humidity;
+int fifteen_minutes_count;
 
 
 // Prototypes
 void write_data(char * raw_data);
 void Measure_Humidity_and_Temp(enum MATERIAL);
-
+void water_soil(int time_ms);
+void printWiFiStatus();
 
 void setup()
 {
   Serial.begin(9600);
   dht.begin();
+  pinMode(2,OUTPUT);
+  fifteen_minutes_count = 0;
 }
 
 void loop()
 {
+  if (fifteen_minutes_count == 0)
+  {
+    Measure_Humidity_and_Temp(AIR);
+    Measure_Humidity_and_Temp(SOIL);
+    water_soil(875000);
+    fifteen_minutes_count++;
+  }
+  else if (fifteen_minutes_count >= FIFTEEN_MINUTES_PER_DAY)
+    fifteen_minutes_count = 0;
+
   Measure_Humidity_and_Temp(AIR);
   Measure_Humidity_and_Temp(SOIL);
-  delay(10000); //Delay 2 sec.
+  Serial.println("Waiting for 15 minutes");
+  delay(875000);
+  fifteen_minutes_count++;
 }
 
 void write_data(char *raw_data)
@@ -64,7 +85,7 @@ void write_data(char *raw_data)
     // wait 10 seconds for connection:
     delay(10000);
   }
-
+  printWiFiStatus();
   // if you get a connection, report back via serial:
   if (client.connect(server, port))
   {
@@ -125,4 +146,34 @@ void Measure_Humidity_and_Temp(enum MATERIAL type)
   char *data_raw = (char*)malloc(155 * sizeof(char));
   sprintf(data_raw, "%s,source=garduino temp=%s,humidity=%s", material, temp_str, humidity_str);
   write_data(data_raw);
+}
+
+void water_soil(int time_ms)
+{
+  digitalWrite(2, HIGH);
+  Serial.println("Watering Soil");
+  delay(time_ms);
+  digitalWrite(2,LOW);
+  Serial.println("Finished Watering Soil");
+}
+
+void printWiFiStatus()
+{
+  // print the SSID of the network you're attached to:
+  Serial.print("\t\t");
+  Serial.print(F("SSID: "));
+  Serial.println(WiFi.SSID());
+
+  // print your board's IP address:
+  IPAddress ip = WiFi.localIP();
+  Serial.print("\t\t");
+  Serial.print(F("Address: "));
+  Serial.println(ip);
+
+  // print the received signal strength:
+  long rssi = WiFi.RSSI();
+  Serial.print("\t\t");
+  Serial.print(F("Signal strength (RSSI):"));
+  Serial.print(rssi);
+  Serial.println(F(" dBm"));
 }
