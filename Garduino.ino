@@ -39,7 +39,7 @@ int fifteen_minutes_count;
 // Prototypes
 void write_data(char * raw_data);
 void Measure_Humidity_and_Temp(enum MATERIAL);
-void water_soil(int time_ms);
+void water_soil(unsigned long time_ms);
 void printWiFiStatus();
 
 void setup()
@@ -48,25 +48,28 @@ void setup()
   dht.begin();
   pinMode(2,OUTPUT);
   fifteen_minutes_count = 0;
+  Serial.println(String("Macro: ") + FIFTEEN_MINUTES_PER_DAY);
 }
 
 void loop()
 {
+  Serial.println(String("Counter: ") + fifteen_minutes_count);
   if (fifteen_minutes_count == 0)
   {
     Measure_Humidity_and_Temp(AIR);
     Measure_Humidity_and_Temp(SOIL);
-    water_soil(875000);
+    water_soil(110000);
+    delay(765000);
     fifteen_minutes_count++;
   }
-  else if (fifteen_minutes_count >= FIFTEEN_MINUTES_PER_DAY)
-    fifteen_minutes_count = 0;
 
   Measure_Humidity_and_Temp(AIR);
   Measure_Humidity_and_Temp(SOIL);
   Serial.println("Waiting for 15 minutes");
   delay(875000);
   fifteen_minutes_count++;
+  if (fifteen_minutes_count >= FIFTEEN_MINUTES_PER_DAY)
+    fifteen_minutes_count = 0;
 }
 
 void write_data(char *raw_data)
@@ -146,9 +149,10 @@ void Measure_Humidity_and_Temp(enum MATERIAL type)
   char *data_raw = (char*)malloc(155 * sizeof(char));
   sprintf(data_raw, "%s,source=garduino temp=%s,humidity=%s", material, temp_str, humidity_str);
   write_data(data_raw);
+  free(data_raw);
 }
 
-void water_soil(int time_ms)
+void water_soil(unsigned long time_ms)
 {
   digitalWrite(2, HIGH);
   Serial.println("Watering Soil");
