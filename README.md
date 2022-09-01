@@ -6,7 +6,7 @@ An Arduino Uno Wifi Rev 2 collect temperature and humidity data every 15 minutes
 It then uses the WIFININA library to send the data from the sensors to a timeseries database called [InfluxDB](https://github.com/influxdata/influxdb) on a [Home Assistant](https://github.com/home-assistant/core) VirtualBox Virtual Machine
 using the inbuilt REST API.
 
-The arduino also controls a 12V 3/4 inch valve, that opens once a day for 15 minutes, provided it has enough pressure from the hose at the input end.
+The arduino also controls a 12V 3/4 inch valve, that opens once a day for 2 minutes, provided it has enough pressure from the hose at the input end.
 
 ## Use
 To connect the Arduino to Wifi, **you'll need to create a file named arduino_secrets.h** and define a few macros in there like so:
