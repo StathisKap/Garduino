@@ -1,20 +1,26 @@
+/*        Created By: Efstathios "Stathis" Kapnidis
+          Feel free to use however you please
+          First Created on August 25, 2022
+ */
+
 #include "defines.h"
 #include "arduino_secrets.h"
 #include <SPI.h>
 #include <WiFiNINA_Generic.h>
 #include <DHT.h>;
 
+// Helps with the Measure_Humidity_and_Temp() function
 enum MATERIAL{AIR, SOIL};
 
 //Constants
-#define DHTPIN 7     // what pin we're connected to
+#define DHTPIN 7     // what pin the air humidity and temperature sensor is connected to
 #define DHTTYPE DHT22   // DHT 22  (AM2302)
 DHT dht(DHTPIN, DHTTYPE); //// Initialize DHT sensor for normal 16mhz Arduino
 
-#define LM35_PIN              A0
-#define SOIL_HUMIDITY_PIN     A1
+#define LM35_PIN              A0 // Soil tempereature sensor
+#define SOIL_HUMIDITY_PIN     A1 // Soil Humidity sensor
 
-#define SOLENOIDVALVE_PIN  2
+#define SOLENOIDVALVE_PIN  2 // 12V Solenoid valve
 
 
 #define FIFTEEN_MINUTES_PER_DAY 96
@@ -41,7 +47,9 @@ void write_data(char * raw_data);
 void Measure_Humidity_and_Temp(enum MATERIAL);
 void water_soil(unsigned long time_ms);
 void printWiFiStatus();
+void web_request(char * raw_data);
 
+//
 void setup()
 {
   Serial.begin(9600);
@@ -92,18 +100,14 @@ void write_data(char *raw_data)
   // if you get a connection, report back via serial:
   if (client.connect(server, port))
   {
-    // Make a HTTP request:
-    client.println(String("POST ") + path_and_querry +" HTTP/1.1");
-    client.println(String("Host: ") + server + ":" + String(port));
-    client.println("User-Agent: arduino-agent");
-    client.println("Accept: */*");
-    client.println(String("Authorization: Token ") + DB_USER +":"+ DB_PASS);
-    client.println("Content-Type: text/plain; charset=utf-8");
-    client.println(String("Content-Length: ") + String(strlen(raw_data)));
-    client.println();
-    client.write(raw_data);
-    client.stop();
-    delay(5000);
+    web_request(raw_data);
+    return;
+  }
+  else
+  {
+    status=WiFi.disconnect();
+    Serial.println("Disconnected");
+    write_data(raw_data);
   }
 }
 
@@ -180,4 +184,20 @@ void printWiFiStatus()
   Serial.print(F("Signal strength (RSSI):"));
   Serial.print(rssi);
   Serial.println(F(" dBm"));
+}
+
+void web_request(char * raw_data)
+{
+    // Make a HTTP request:
+    client.println(String("POST ") + path_and_querry +" HTTP/1.1");
+    client.println(String("Host: ") + server + ":" + String(port));
+    client.println("User-Agent: arduino-agent");
+    client.println("Accept: */*");
+    client.println(String("Authorization: Token ") + DB_USER +":"+ DB_PASS);
+    client.println("Content-Type: text/plain; charset=utf-8");
+    client.println(String("Content-Length: ") + String(strlen(raw_data)));
+    client.println();
+    client.write(raw_data);
+    client.stop();
+    delay(5000);
 }
