@@ -82,32 +82,33 @@ void loop()
 
 void write_data(char *raw_data)
 {
-  // check for the WiFi module:
-  if (WiFi.status() == WL_NO_MODULE)
-  {
-    while (true);
-  }
+  while(true){
+    // check for the WiFi module:
+    if (WiFi.status() == WL_NO_MODULE)
+    {
+      while (true);
+    }
 
-  // attempt to connect to Wifi network:
-  while (status != WL_CONNECTED)
-  {
-    // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
-    status = WiFi.begin(ssid, pass);
-    // wait 10 seconds for connection:
-    delay(10000);
-  }
-  printWiFiStatus();
-  // if you get a connection, report back via serial:
-  if (client.connect(server, port))
-  {
-    web_request(raw_data);
-    return;
-  }
-  else
-  {
-    status=WiFi.disconnect();
-    Serial.println("Disconnected");
-    write_data(raw_data);
+    // attempt to connect to Wifi network:
+    while (status != WL_CONNECTED)
+    {
+      // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
+      status = WiFi.begin(ssid, pass);
+      // wait 10 seconds for connection:
+      delay(10000);
+    }
+    printWiFiStatus();
+    // if you get a connection, report back via serial:
+    if (client.connect(server, port))
+    {
+      web_request(raw_data);
+      break;
+    }
+    else
+    {
+      status=WiFi.disconnect();
+      Serial.println("Disconnected");
+    }
   }
 }
 
