@@ -82,10 +82,12 @@ void loop()
 
 void write_data(char *raw_data)
 {
+  Serial.println("Writing to InfluxDB");
   while(true){
     // check for the WiFi module:
     if (WiFi.status() == WL_NO_MODULE)
     {
+      Serial.println("No Module Found");
       while (true);
     }
 
@@ -94,6 +96,7 @@ void write_data(char *raw_data)
     {
       // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
       status = WiFi.begin(ssid, pass);
+      Serial.println("Connecting to Wifi");
       // wait 10 seconds for connection:
       delay(10000);
     }
@@ -102,13 +105,14 @@ void write_data(char *raw_data)
     if (client.connect(server, port))
     {
       web_request(raw_data);
-      break;
+      return;
     }
     else
     {
       status=WiFi.disconnect();
       Serial.println("Disconnected");
     }
+    Serial.println("Looping");
   }
 }
 
