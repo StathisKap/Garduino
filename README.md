@@ -1,5 +1,8 @@
 # Garduino
 
+**Video Showcase of the project**
+Video: https://www.youtube.com/watch?v=Hn0Y_s4RmP8
+
 A project inspired by the YouTube Channel **Practical Engineering** on [this video](https://www.youtube.com/watch?v=O_Q1WKCtWiA)
 
 An Arduino Uno Wifi Rev 2 collect temperature and humidity data every 15 minutes from the soil using 2 analog sensors, and from the air using 1 digital sensor.
